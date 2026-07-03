@@ -1,4 +1,13 @@
 {
+    "mcpServers": {
+      "notion": {
+        "command": "bash",
+        "args": [
+          "-lc",
+          "source .env && OPENAPI_MCP_HEADERS=\"{\\\"Authorization\\\": \\\"Bearer $NOTION_API_KEY\\\", \\\"Notion-Version\\\": \\\"2022-06-28\\\"}\" npx -y @notionhq/notion-mcp-server"
+        ]
+      }
+    },
     "hooks": {
       "PostToolUse": [
         {
