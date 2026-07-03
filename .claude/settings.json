@@ -1,0 +1,28 @@
+{
+    "hooks": {
+      "PostToolUse": [
+        {
+          "matcher": "Write",
+          "handler": {
+            "type": "command",
+            "command": "f=\"$CLAUDE_FILE_PATH\"; if [[ \"$f\" == charts/*.png ]]; then n=$(ls charts/*.png 2>/dev/null | wc -l | tr -d ' '); echo \"Chart saved: $(basename $f) — $n/5 charts complete\"; fi"
+          }
+        },
+        {
+          "matcher": "Bash",
+          "handler": {
+            "type": "command",
+            "command": "echo \"$(date '+%Y-%m-%d %H:%M:%S') | command logged by Claude Code\" >> session-log.md"
+          }
+        }
+      ],
+      "Stop": [
+        {
+          "handler": {
+            "type": "command",
+            "command": "bash .claude/hooks/validate-phases.sh"
+          }
+        }
+      ]
+    }
+  }
