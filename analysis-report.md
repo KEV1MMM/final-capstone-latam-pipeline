@@ -31,6 +31,15 @@ Two recommendations follow directly from the data. Programmes should be **locali
 
 The cleaned dataset was saved to `data/latam_finanzas_clean.csv` (500 rows, 22 columns) and used for all analyses in this report.
 
+### Pipeline Architecture
+
+This Final Capstone builds on the Midterm II analysis by turning it into a repeatable, automated pipeline with four components:
+
+- **Hooks** (`.claude/settings.json`): a *chart counter* hook prints progress toward the 5 required charts each time one is saved to `charts/`; a *script logger* hook appends a timestamped entry to `session-log.md` after every Bash command Claude Code runs; a *phase validator* hook (`.claude/hooks/validate-phases.sh`) checks whether the expected output for each phase exists — clean dataset, country-profiler agent, analysis script, 5 charts, executive report, session log, and both skills.
+- **Skills** (`.claude/skills/`): `/interpret` produces a consistent 3-sentence policy-facing interpretation (fact → implication → recommendation) for each statistical finding; `/publish-finding` prepares and publishes a finding to the Notion Findings Tracker database, with a local fallback in `notion_exports/` if Notion MCP is unavailable.
+- **Country Profiler Agent** (`.claude/agents/country-profiler.md`): generates a standardized statistical profile — sample size, age range, income distribution, housing burden, spending breakdown, savings, AI usage, and financial satisfaction — for each of the six countries, saved to `scripts/country_[name].py` and compiled in `scripts/country_profiles.md`.
+- **Notion MCP**: publishes the six country profiles to the "Country Profiles" database, the six findings (with a key-statistic callout, interpretation, and "Next steps") to the "Findings Tracker" database, and this executive report to the "Informe Ejecutivo" page — making the pipeline's output reusable and shareable beyond the local repository.
+
 ---
 
 ## 3. Sample Profile
@@ -78,6 +87,8 @@ Median monthly income across the six countries ranges from **USD 798 in Argentin
 
 These income gaps are not cosmetic: a savings target or investment threshold calibrated for Brazil will be structurally unachievable for most Argentine or Colombian participants. Programmes that apply uniform financial benchmarks across the region risk setting goals that demotivate rather than inspire. *(See Figure 1)*
 
+> **Policy Interpretation (via `/interpret` skill):** Median monthly income ranges from USD 798 in Argentina to USD 1,458 in Brazil, an 83% gap between the lowest- and highest-earning countries in the sample. This disparity means a single regional financial curriculum would be unattainable for participants in Argentina, Colombia, and Perú, while offering too little challenge for those in Brazil and Chile. Futuro Digital LatAm should build two income-tier content tracks: one focused on emergency funds and debt management for lower-income countries, and another on investing and wealth-building for higher-income countries.
+
 ![Figure 1: Income Distribution by Country](charts/01_income_by_country.png)
 *Figure 1: Box plot of monthly income (USD) by country, sorted by median. Brazil's wide interquartile range reflects substantially greater income dispersion than other markets.*
 
@@ -95,6 +106,8 @@ Average monthly savings and savings rate both increase steadily across age group
 | 29–32 | 128 | 154.07 | 15.5% |
 
 The **18–22 cohort saves USD 61/month at a 5.7% rate** — less than half the savings rate of the oldest group. At this pace, a respondent aged 18 earning the sample median would take more than two years to accumulate a single month's income as an emergency buffer. The steepest relative improvement occurs between the 23–25 and 26–28 groups (from 8.3% to 11.7%), suggesting this is a critical window for intervention. The trend line across all ages has a positive slope of USD 8.7 per additional year of age. *(See Figure 2)*
+
+> **Policy Interpretation (via `/interpret` skill):** The 18–22 age group saves only USD 61 per month (5.7% of income), compared to USD 154 per month (15.5%) for the 29–32 group. This gap leaves the youngest professionals significantly more exposed to financial shocks, since at this pace it would take more than two years to accumulate a single month's income as an emergency buffer. Futuro Digital LatAm should launch a savings module targeted at participants under 23, built around small automated transfers and a "first emergency fund" milestone rather than a fixed dollar target unrealistic at entry-level income.
 
 ![Figure 2: Age vs. Monthly Savings](charts/02_age_vs_savings.png)
 *Figure 2: Scatter plot of age vs. monthly savings (USD) with linear trend line (slope = 8.7). Points coloured by country. Negative savings values are shown below the zero line.*
@@ -116,6 +129,8 @@ Across the full sample of 500 respondents, **housing (28.5%) and food (23.8%) to
 
 Healthcare at **4.9% of income** — the lowest category tracked — is a particularly notable data point. For a cohort earning an average of USD 1,017/month, this amounts to roughly USD 50/month, a figure more likely to reflect foregone care than adequate coverage. Meanwhile, education (8.5%) and entertainment (8.7%) are virtually identical and already modest: there is little discretionary slack to compress. *(See Figure 3)*
 
+> **Policy Interpretation (via `/interpret` skill):** Housing (28.5%) and food (23.8%) together account for 52.3% of average monthly income across the 500 respondents, leaving less than half of income for everything else. This means traditional advice to cut entertainment (8.7%) or education (8.5%) spending will have minimal financial impact for the sample as a whole, since those categories are already modest and are not the real bottleneck. Futuro Digital LatAm's budgeting content should instead focus on housing-cost renegotiation strategies and food-budget planning rather than marginal cuts to already-small categories.
+
 ![Figure 3: Average Spending Breakdown](charts/03_spending_breakdown.png)
 *Figure 3: Average percentage of monthly income spent across six expense categories (full sample, n=500). Sorted from highest to lowest.*
 
@@ -134,6 +149,8 @@ The **284 credit card holders** (56.8% of the sample) and **216 non-holders** (4
 
 Card holders spend 16.1% more on food and 17.2% more on entertainment, yet still save 6.7% more per month. This suggests that credit cards are not simply a mechanism for overspending — card holders appear to be slightly more financially engaged overall. The risk lies in the 46.8% of the total sample who carry existing debt: a card-enabled spending pattern layered on top of outstanding balances represents the highest-risk financial profile in the dataset.
 
+> **Policy Interpretation (via `/interpret` skill):** Credit card holders (56.8% of the sample) spend 16.1% more on food and 17.2% more on entertainment than non-holders, yet still save 6.7% more per month, despite having nearly identical incomes (+1.5%). This shows that credit card ownership is not itself the cause of poor financial behaviour, and that the real risk is concentrated among the 46.8% of respondents who also carry existing debt. Futuro Digital LatAm should refocus its credit card curriculum on the active-debt segment, teaching how compound interest accrues, the true cost of carrying a balance, and debt repayment prioritization.
+
 ---
 
 ### 4.5 AI Tool Usage Is Strongly Correlated With Financial Satisfaction — Income Is a Confounding Factor
@@ -147,6 +164,8 @@ Respondents are grouped into three AI tool usage tiers based on reported hours p
 | High (11+ hrs/week) | 21 | 3.43 | 1,750.29 |
 
 The Pearson correlation between weekly AI tool hours and financial satisfaction score is **r = 0.57 (p < 0.0001)** — a moderately strong, statistically significant relationship. However, high AI users earn more than **twice as much on average** as low users (USD 1,750 vs. USD 747). Income is a substantial confounding variable: the data establishes a meaningful association but cannot establish that AI tool usage *causes* greater financial satisfaction. What it does confirm is that digitally active participants are disproportionately higher earners who use technology as part of a broader financially engaged lifestyle. *(See Figure 4)*
+
+> **Policy Interpretation (via `/interpret` skill):** There is a statistically significant positive correlation (r=0.57, p<0.0001) between weekly AI tool usage hours and financial satisfaction, with the high-usage group (11+ hours) reporting an average satisfaction of 3.43 versus 2.05 for the low-usage group (0–3 hours). However, high-usage respondents earn more than twice as much on average as low-usage respondents (USD 1,750 vs. USD 747), making income a substantial confounding factor and meaning AI usage cannot be said to cause higher financial satisfaction. Futuro Digital LatAm should incorporate AI tools as an engagement channel across all income levels within the programme, evaluating satisfaction impact while controlling for income rather than attributing the gain to technology use alone.
 
 ![Figure 4: Financial Satisfaction by AI Tool Usage](charts/04_satisfaction_by_ai_usage.png)
 *Figure 4: Average financial satisfaction score (1–5 scale) by AI tool usage group. Low users (0–3 hrs/week) report a mean score of 2.05 vs. 3.43 for high users (11+ hrs/week).*
@@ -167,6 +186,8 @@ Two countries exceed the internationally recognised **30% housing affordability 
 | Perú | 24.6% | 201.14 | 817.76 |
 
 Argentina's situation is particularly acute: it has the **lowest median income in the sample (USD 798)** yet the **highest housing burden (34.1%)**. Chilean participants pay more in absolute terms (USD 407/month vs. Argentina's USD 258) but do so against a substantially higher income base. In both countries, housing costs are a structural market constraint — not a behaviour amenable to correction through budgeting advice alone. *(See Figure 5)*
+
+> **Policy Interpretation (via `/interpret` skill):** Argentina spends 34.1% of monthly income on housing and Chile spends 32.6%, both above the 30% affordability threshold, with Argentina doing so on top of the lowest median income in the entire sample (USD 798). This combination of high housing burden and low income turns the issue into a structural market constraint rather than a budgeting-discipline problem, disproportionately affecting Argentine participants. For Argentina and Chile, Futuro Digital LatAm should replace generic budgeting content with modules on tenant rights, income-diversification strategies, shared-housing financial planning, and awareness of available housing subsidies.
 
 ![Figure 5: Housing Burden by Country](charts/05_housing_burden_by_country.png)
 *Figure 5: Average housing cost as a percentage of monthly income, by country. The dashed red line marks the 30% affordability threshold. Argentina (34.1%) and Chile (32.6%) are the only countries that exceed it.*
